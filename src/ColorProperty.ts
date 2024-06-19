@@ -3,8 +3,9 @@ import { ThemeProperty } from "./ThemeProperty";
 import { ThemeValueFilterProps } from "./types";
 
 /**
- * ColorProperty extends the base `ThemeProperty` class in order to transform
- * the output of CSS variable prefixes/values and CSS property values.
+ * ColorProperty extends the base `ThemeProperty` class in order to customize how
+ * Tailwind theme color property values get output to CSS variables; it converts
+ * user-defined HEX codes to HSL values, with fall-back to the HEX codes.
  */
 export class ColorProperty extends ThemeProperty {
   // inject "color" into the generated CSS variable names:

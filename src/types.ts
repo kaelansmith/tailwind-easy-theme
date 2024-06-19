@@ -1,14 +1,13 @@
 import { ThemeConfig } from "tailwindcss/types/config";
 import { ThemeProperty } from "./ThemeProperty";
 
-// export type TailwindThemeColorProperty =
-//   (typeof colorProperties)[number];
-
 export type ThemeOptions = {
   /** The prefix added to the key of a color. Defaults to `--color-` */
   prefix?: string;
   /** The selector to add the css variables to. Defaults to `:root` */
   selector?: string;
+  /** Customize how theme properties get converted to CSS variables */
+  themePropertiesConfig?: ThemePropertiesConfig;
 };
 
 export type VariantOptions = {
@@ -19,7 +18,9 @@ export type VariantOptions = {
 };
 
 /** Tailwind config's "theme" type: */
-export type ThemeProps = Partial<ThemeConfig>;
+export type ThemeProps = Partial<
+  Omit<ThemeConfig, "screens" | "supports" | "data">
+>;
 
 /**
  * ${prefix}${key}: <hsl-values>
@@ -35,14 +36,9 @@ export type CssVariables = Record<string, string>;
  ======================= */
 
 export type FlatThemePropertyConfig = Record<string, string>;
-export type ThemePropertyConfig = Record<
-  string,
-  FlatThemePropertyConfig | string
->;
-export type PartialThemePropertyConfig<
-  PrimaryTheme extends ThemePropertyConfig
-> = {
-  [K in keyof PrimaryTheme]?: Partial<PrimaryTheme[K]>;
+
+export type ThemePropertyConfig = {
+  [key: string]: string | ThemePropertyConfig;
 };
 
 export type ThemePropertyOptions = {
@@ -52,8 +48,13 @@ export type ThemePropertyOptions = {
 // Constructor signature for classes extending ThemeProperty
 export type ThemePropertyConstructor = new (...args: any[]) => ThemeProperty;
 
-export type InternalThemePropertiesConfig = {
-  [P: keyof ThemeConfig]: {
+export type ThemePropertiesConfig = {
+  [P in keyof ThemeProps]: {
+    prefix: string;
+    type: ThemePropertyConstructor;
+  };
+} & {
+  [key: string]: {
     prefix: string;
     type: ThemePropertyConstructor;
   };

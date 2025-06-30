@@ -18,7 +18,7 @@ export function flattenThemeConfig(
 
     const { DEFAULT, ...rest } = value;
     if (DEFAULT) {
-      flattenedThemeConfig[key] = DEFAULT;
+      flattenedThemeConfig[key] = DEFAULT as string;
     }
 
     const nestedThemeProperty = flattenThemeConfig(rest, key);

@@ -17,7 +17,8 @@
     "test": "npx tailwindcss -i ./styles/input.css -o ./styles/output.css",
     "dev": "tsc -w",
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "keywords": [],
   "author": "",

@@ -35,7 +35,7 @@ export class ColorProperty extends ThemeProperty {
   }: ThemeValueFilterProps) {
     const hexValue = colord(themePropertyValue).alpha(1).toHex();
     return `hsl(var(${this.getCssVariableName(
-      themePropertyKey
+      themePropertyKey,
     )}, ${hexValue}) / <alpha-value>)`;
   }
 }

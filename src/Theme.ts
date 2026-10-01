@@ -87,7 +87,7 @@ export class Theme<T extends ThemeProps = ThemeProps> {
         propertyValue as ThemePropertyConfig,
         {
           prefix,
-        }
+        },
       ).getCSS();
 
       allCssVariables = {
@@ -139,7 +139,7 @@ export class Theme<T extends ThemeProps = ThemeProps> {
         return {
           theme: { extend: themeConfig },
         };
-      }
+      },
     )({});
   }
 }

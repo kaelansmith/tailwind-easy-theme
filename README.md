@@ -7,17 +7,17 @@ pnpm i -D tailwind-easy-theme colord
 ## Usage
 
 ```javascript
-const { Theme } = require('tailwind-easy-theme');
+const { Theme } = require("tailwind-easy-theme");
 
 const theme = new Theme({
   colors: {
-    somecolor: '#e9e6ff',
+    somecolor: "#e9e6ff",
     primary: {
-      DEFAULT: '#ffcccc',
-      100: '#ffcccc',
-      200: '#ff9999',
-      300: '#ff6666',
-      400: '#ff3333',
+      DEFAULT: "#ffcccc",
+      100: "#ffcccc",
+      200: "#ff9999",
+      300: "#ff6666",
+      400: "#ff3333",
     },
   },
 });
@@ -26,28 +26,28 @@ const darkMode = theme.variant(
   {
     colors: {
       primary: {
-        DEFAULT: '#0f172a',
-        400: '#475569',
-        300: '#334155',
-        200: '#1e293b',
-        100: '#0f172a',
+        DEFAULT: "#0f172a",
+        400: "#475569",
+        300: "#334155",
+        200: "#1e293b",
+        100: "#0f172a",
       },
     },
   },
   {
-    mediaQuery: '@media (prefers-color-scheme: dark)',
-  }
+    mediaQuery: "@media (prefers-color-scheme: dark)",
+  },
 );
 
 const coolTheme = theme.variant(
   {
     colors: {
-      somecolor: '#555',
+      somecolor: "#555",
     },
   },
   {
     selector: '[data-theme="cool-theme"]',
-  }
+  },
 );
 
 /** @type {import('tailwindcss').Config} */
@@ -88,11 +88,11 @@ Generated CSS for this example:
   }
 }
 
-[data-theme='cool-theme'] {
+[data-theme="cool-theme"] {
   --color-somecolor: 0 0% 33%;
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   --color-primary: 222 47% 11%;
   --color-primary-100: 222 47% 11%;
   --color-primary-200: 217 33% 17%;

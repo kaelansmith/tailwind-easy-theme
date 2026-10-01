@@ -2,7 +2,7 @@ import type { FlatThemePropertyConfig, ThemePropertyConfig } from "../types";
 
 export function flattenThemeConfig(
   config: ThemePropertyConfig,
-  keyPrefix: string = ""
+  keyPrefix: string = "",
 ): FlatThemePropertyConfig {
   let flattenedThemeConfig: FlatThemePropertyConfig = {};
 

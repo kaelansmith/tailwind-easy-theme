@@ -64,7 +64,7 @@ export class Theme<T extends ThemeProps = ThemeProps> {
     this.cssProperties = cssProperties;
   }
 
-  getCSS(theme: T, userPrefix?: string) {
+  getCSS(theme: T | DeepPartial<ThemePropertyConfig>, userPrefix?: string) {
     let allCssVariables: CssVariables = {};
     let allCssProperties: T = {} as T;
 

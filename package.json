@@ -18,7 +18,9 @@
     "dev": "tsc -w",
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check ."
   },
   "keywords": [],
   "author": "",
@@ -27,7 +29,8 @@
     "@changesets/cli": "^2.26.0",
     "tailwindcss": "^3.2.4",
     "ts-essentials": "^9.4.1",
-    "typescript": "^4.9.5"
+    "typescript": "7.0.2",
+    "oxfmt": "0.71.0"
   },
   "dependencies": {
     "colord": "^2.9.3"

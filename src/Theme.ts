@@ -38,12 +38,15 @@ const defaultThemePropertiesConfig: ThemePropertiesConfig = {
   stroke: { prefix: "stroke", type: ColorProperty },
 };
 
+type ThemePropertyInstance = { propertyKey: string; property: ThemeProperty };
+
 export class Theme<T extends ThemeProps = ThemeProps> {
   private userPrefix: string | undefined;
   private selector: string = ":root";
   private themePropertiesConfig: ThemePropertiesConfig =
     defaultThemePropertiesConfig;
-  private cssProperties: T = {} as T;
+  private properties: ThemePropertyInstance[] = [];
+  private variableKeys: Record<string, string> = {};
   private cssRules: CSSRuleObject = {};
 
   constructor(theme: T, options?: ThemeOptions) {
@@ -58,15 +61,21 @@ export class Theme<T extends ThemeProps = ThemeProps> {
       };
     }
 
-    const { cssVariables, cssProperties } = this.getCSS(theme, this.userPrefix);
+    const { cssVariables, properties, variableKeys } = this.getCSS(
+      theme,
+      this.userPrefix,
+    );
 
     this.cssRules[this.selector] = cssVariables;
-    this.cssProperties = cssProperties;
+    this.properties = properties;
+    this.variableKeys = variableKeys;
   }
 
   getCSS(theme: T | DeepPartial<ThemePropertyConfig>, userPrefix?: string) {
     let allCssVariables: CssVariables = {};
     let allCssProperties: T = {} as T;
+    let allVariableKeys: Record<string, string> = {};
+    const properties: ThemePropertyInstance[] = [];
 
     (Object.keys(theme) as (keyof ThemeProps)[]).forEach((propertyKey) => {
       const propertyValue = theme[propertyKey];
@@ -83,17 +92,17 @@ export class Theme<T extends ThemeProps = ThemeProps> {
 
       prefix = userPrefix ? `${userPrefix}-${prefix}` : prefix;
 
-      const { cssVariables, cssProperties } = new Property(
-        propertyValue as ThemePropertyConfig,
-        {
-          prefix,
-        },
-      ).getCSS();
+      const property = new Property(propertyValue as ThemePropertyConfig, {
+        prefix,
+      });
+      const { cssVariables, cssProperties, variableKeys } = property.getCSS();
+      properties.push({ propertyKey, property });
 
       allCssVariables = {
         ...allCssVariables,
         ...cssVariables,
       };
+      allVariableKeys = { ...allVariableKeys, ...variableKeys };
 
       allCssProperties[propertyKey as keyof T] = cssProperties as any;
     });
@@ -101,7 +110,36 @@ export class Theme<T extends ThemeProps = ThemeProps> {
     return {
       cssVariables: allCssVariables,
       cssProperties: allCssProperties,
+      variableKeys: allVariableKeys,
+      properties,
     };
+  }
+
+  /**
+   * Properties often share a palette (eg. `stroke`, `fill`, and
+   * `placeholderColor` reusing `textColor`), which would redeclare each value
+   * once per property in every scope, and again for every Tailwind variant of a
+   * scope class (`hover:dark`, `md:dark`). Two variables for the same key that
+   * hold equal values in every emitted scope (or are absent from the same
+   * scopes) resolve identically everywhere, so only the first is declared and
+   * the rest read it.
+   */
+  private getVariableAliases(rules: CSSRuleObject) {
+    const blocks = declarationBlocks(rules);
+    const canonical = new Map<string, string>();
+    const aliases: Record<string, string> = {};
+
+    Object.entries(this.variableKeys).forEach(([name, key]) => {
+      const signature = JSON.stringify([
+        key,
+        ...blocks.map((block) => block[name] ?? null),
+      ]);
+      const target = canonical.get(signature);
+      if (target) aliases[name] = target;
+      else canonical.set(signature, name);
+    });
+
+    return aliases;
   }
 
   variant(theme: DeepPartial<ThemePropertyConfig>, options?: VariantOptions) {
@@ -123,16 +161,20 @@ export class Theme<T extends ThemeProps = ThemeProps> {
   }
 
   create(base?: CSSRuleObject) {
-    const cssRules = this.cssRules;
-    const themeConfig = this.cssProperties;
+    const rules = { ...this.cssRules, ...base };
+    const aliases = this.getVariableAliases(rules);
+    const cssRules = withoutAliases(rules, aliases);
+    const themeConfig = {} as T;
+    this.properties.forEach(({ propertyKey, property }) => {
+      themeConfig[propertyKey as keyof T] = property
+        .useVariableAliases(aliases)
+        .getCSS().cssProperties as any;
+    });
 
     return withOptions(
       () => {
         return function ({ addBase }) {
-          addBase({
-            ...cssRules,
-            ...base,
-          });
+          addBase(cssRules);
         };
       },
       () => {
@@ -142,4 +184,44 @@ export class Theme<T extends ThemeProps = ThemeProps> {
       },
     )({});
   }
+}
+
+/** Every rule body that declares custom properties, at any nesting depth. */
+function declarationBlocks(rules: CSSRuleObject): Record<string, string>[] {
+  const own: Record<string, string> = {};
+  const nested: Record<string, string>[] = [];
+
+  Object.entries(rules).forEach(([key, value]) => {
+    if (typeof value === "string") {
+      if (key.startsWith("--")) own[key] = value;
+    } else if (value && typeof value === "object" && !Array.isArray(value)) {
+      nested.push(...declarationBlocks(value as CSSRuleObject));
+    }
+  });
+
+  return Object.keys(own).length ? [own, ...nested] : nested;
+}
+
+function withoutAliases(
+  rules: CSSRuleObject,
+  aliases: Record<string, string>,
+): CSSRuleObject {
+  const result: CSSRuleObject = {};
+
+  Object.entries(rules).forEach(([key, value]) => {
+    if (typeof value === "string") {
+      if (key in aliases) return;
+      result[key] = value.replace(
+        /var\((--[\w-]+)/g,
+        (match, name: string) =>
+          name in aliases ? `var(${aliases[name]}` : match,
+      );
+    } else if (value && typeof value === "object" && !Array.isArray(value)) {
+      result[key] = withoutAliases(value as CSSRuleObject, aliases);
+    } else {
+      result[key] = value;
+    }
+  });
+
+  return result;
 }
